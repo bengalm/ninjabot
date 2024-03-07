@@ -189,7 +189,7 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 		TimeInForce(futures.TimeInForceTypeGTC).
 		Side(sideType).
 		Quantity(b.formatQuantity(pair, quantity)).
-		Price(b.formatPrice(pair, limit)).
+		//Price(b.formatPrice(pair, limit)).
 		StopPrice(b.formatPrice(pair, limit))
 
 	order, err := orderService.
