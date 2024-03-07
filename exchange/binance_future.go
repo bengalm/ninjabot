@@ -418,7 +418,7 @@ func (b *BinanceFuture) Account() (model.Account, error) {
 	}
 
 	for _, asset := range acc.Assets {
-		free, err := strconv.ParseFloat(asset.WalletBalance, 64)
+		free, err := strconv.ParseFloat(asset.AvailableBalance, 64)
 		if err != nil {
 			return model.Account{}, err
 		}
@@ -426,10 +426,14 @@ func (b *BinanceFuture) Account() (model.Account, error) {
 		if free == 0 {
 			continue
 		}
-
+		margin, err := strconv.ParseFloat(asset.PositionInitialMargin, 64)
+		if err != nil {
+			return model.Account{}, err
+		}
 		balances = append(balances, model.Balance{
 			Asset: asset.Asset,
 			Free:  free,
+			Lock:  margin,
 		})
 	}
 	float, err := strconv.ParseFloat(acc.AvailableBalance, 64)
@@ -451,9 +455,9 @@ func (b *BinanceFuture) Position(pair string) (asset, quote float64, err error) 
 		return 0, 0, err
 	}
 
-	assetBalance, _ := acc.Balance(assetTick, quoteTick)
+	assetBalance, quoteBalance := acc.Balance(assetTick, quoteTick)
 
-	return assetBalance.Free + assetBalance.Lock, acc.Available, nil
+	return assetBalance.Free + assetBalance.Lock, quoteBalance.Free, nil
 	//return assetBalance.Free + assetBalance.Lock, quoteBalance.Free + quoteBalance.Lock, nil
 }
 
