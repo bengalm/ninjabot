@@ -174,10 +174,7 @@ func (b *BinanceFuture) CreateOrderOCO(_ model.SideType, _ string,
 }
 
 func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit float64) (model.Order, error) {
-	//err := b.validate(pair, quantity)
-	//if err != nil {
-	//	return model.Order{}, err
-	//}
+
 	sideType := futures.SideTypeSell
 	if limit < 0 {
 		sideType = futures.SideTypeBuy
@@ -192,6 +189,10 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 		StopPrice(b.formatPrice(pair, limit))
 
 	if quantity > 0 {
+		err := b.validate(pair, quantity)
+		if err != nil {
+			return model.Order{}, err
+		}
 		orderService = orderService.Quantity(b.formatQuantity(pair, quantity))
 	} else {
 		orderService = orderService.ClosePosition(true)
