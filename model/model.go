@@ -157,7 +157,8 @@ func (c Candle) Less(j Item) bool {
 }
 
 type Account struct {
-	Balances []Balance
+	Balances  []Balance
+	Available float64
 }
 
 func (a Account) Balance(assetTick, quoteTick string) (Balance, Balance) {

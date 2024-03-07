@@ -432,9 +432,15 @@ func (b *BinanceFuture) Account() (model.Account, error) {
 			Free:  free,
 		})
 	}
-
+	float, err := strconv.ParseFloat(acc.AvailableBalance, 64)
+	if err != nil {
+		return model.Account{
+			Balances: balances,
+		}, nil
+	}
 	return model.Account{
-		Balances: balances,
+		Balances:  balances,
+		Available: float,
 	}, nil
 }
 
