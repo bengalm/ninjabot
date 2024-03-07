@@ -451,9 +451,10 @@ func (b *BinanceFuture) Position(pair string) (asset, quote float64, err error) 
 		return 0, 0, err
 	}
 
-	assetBalance, quoteBalance := acc.Balance(assetTick, quoteTick)
+	assetBalance, _ := acc.Balance(assetTick, quoteTick)
 
-	return assetBalance.Free + assetBalance.Lock, quoteBalance.Free + quoteBalance.Lock, nil
+	return assetBalance.Free + assetBalance.Lock, acc.Available, nil
+	//return assetBalance.Free + assetBalance.Lock, quoteBalance.Free + quoteBalance.Lock, nil
 }
 
 func (b *BinanceFuture) CandlesSubscription(ctx context.Context, pair, period string) (chan model.Candle, chan error) {
