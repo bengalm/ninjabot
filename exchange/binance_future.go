@@ -178,13 +178,21 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 	if err != nil {
 		return model.Order{}, err
 	}
+	sideType := futures.SideTypeSell
+	if limit < 0 {
+		sideType = futures.SideTypeBuy
+		limit = -limit
+	}
 
-	order, err := b.client.NewCreateOrderService().Symbol(pair).
+	orderService := b.client.NewCreateOrderService().Symbol(pair).
 		Type(futures.OrderTypeStopMarket).
 		TimeInForce(futures.TimeInForceTypeGTC).
-		Side(futures.SideTypeSell).
+		Side(sideType).
 		Quantity(b.formatQuantity(pair, quantity)).
 		Price(b.formatPrice(pair, limit)).
+		StopPrice(b.formatPrice(pair, limit))
+
+	order, err := orderService.
 		Do(b.ctx)
 	if err != nil {
 		return model.Order{}, err
