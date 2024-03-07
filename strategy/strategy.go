@@ -1,8 +1,8 @@
 package strategy
 
 import (
-	"github.com/rodrigo-brito/ninjabot/model"
-	"github.com/rodrigo-brito/ninjabot/service"
+	"github.com/bengalm/ninjabot/model"
+	"github.com/bengalm/ninjabot/service"
 )
 
 type Strategy interface {

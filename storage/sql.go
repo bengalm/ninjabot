@@ -6,7 +6,7 @@ import (
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 
-	"github.com/rodrigo-brito/ninjabot/model"
+	"github.com/bengalm/ninjabot/model"
 )
 
 type SQL struct {

@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	model "github.com/rodrigo-brito/ninjabot/model"
+	model "github.com/bengalm/ninjabot/model"
 	mock "github.com/stretchr/testify/mock"
 )
 

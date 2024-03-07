@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/xhit/go-str2duration/v2"
 
-	"github.com/rodrigo-brito/ninjabot/model"
+	"github.com/bengalm/ninjabot/model"
 )
 
 var ErrInsufficientData = errors.New("insufficient data")

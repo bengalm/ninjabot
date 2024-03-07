@@ -3,7 +3,7 @@ package order
 import (
 	"testing"
 
-	"github.com/rodrigo-brito/ninjabot/model"
+	"github.com/bengalm/ninjabot/model"
 	"github.com/stretchr/testify/require"
 )
 

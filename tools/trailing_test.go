@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/rodrigo-brito/ninjabot/tools"
+	"github.com/bengalm/ninjabot/tools"
 )
 
 func TestNewTrailingStop(t *testing.T) {
