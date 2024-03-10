@@ -575,6 +575,7 @@ func (c *Controller) Cancel(order model.Order) error {
 	return nil
 }
 func (c *Controller) CancelOpenOrders(pair string) error {
+	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
 	log.Infof("[ORDER] CancelOpenOrders order for %s", pair)
