@@ -574,3 +574,21 @@ func (c *Controller) Cancel(order model.Order) error {
 	log.Infof("[ORDER CANCELED] %s", order)
 	return nil
 }
+func (c *Controller) CancelOpenOrders(pair string) error {
+	defer c.mtx.Unlock()
+
+	log.Infof("[ORDER] CancelOpenOrders order for %s", pair)
+	err := c.exchange.CancelOpenOrders(pair)
+	if err != nil {
+		return err
+	}
+
+	//order.Status = model.OrderStatusTypePendingCancel
+	//err = c.storage.UpdateOrder(&order)
+	//if err != nil {
+	//	c.notifyError(err)
+	//	return err
+	//}
+	log.Infof("[ORDER CancelOpenOrders] %s", pair)
+	return nil
+}

@@ -573,6 +573,9 @@ func (b *Binance) CandlesByPeriod(ctx context.Context, pair, period string,
 
 	return candles, nil
 }
+func (b *Binance) CancelOpenOrders(pair string) error {
+	return nil
+}
 
 func CandleFromKline(pair string, k binance.Kline) model.Candle {
 	t := time.Unix(0, k.OpenTime*int64(time.Millisecond))

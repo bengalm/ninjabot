@@ -672,6 +672,9 @@ func (p *PaperWallet) Cancel(order model.Order) error {
 	}
 	return nil
 }
+func (p *PaperWallet) CancelOpenOrders(pair string) error {
+	return nil
+}
 
 func (p *PaperWallet) Order(_ string, id int64) (model.Order, error) {
 	for _, order := range p.orders {
