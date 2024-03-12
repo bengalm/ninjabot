@@ -555,6 +555,27 @@ func (c *Controller) CreateOrderStop(pair string, size float64, limit float64) (
 	return order, nil
 }
 
+func (c *Controller) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	log.Infof("[ORDER] Creating TakeProfit order for %s", pair)
+	order, err := c.exchange.TakeProfit(side, pair, quantity, limit)
+	if err != nil {
+		c.notifyError(err)
+		return model.Order{}, err
+	}
+
+	err = c.storage.CreateOrder(&order)
+	if err != nil {
+		c.notifyError(err)
+		return model.Order{}, err
+	}
+	go c.orderFeed.Publish(order, true)
+	log.Infof("[ORDER CREATED] %s", order)
+	return order, nil
+}
+
 func (c *Controller) Cancel(order model.Order) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()

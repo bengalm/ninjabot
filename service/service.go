@@ -33,6 +33,7 @@ type Broker interface {
 	CreateOrderStop(pair string, quantity float64, limit float64) (model.Order, error)
 	Cancel(model.Order) error
 	CancelOpenOrders(pair string) error
+	TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error)
 }
 
 type Notifier interface {

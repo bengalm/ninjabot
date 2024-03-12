@@ -316,6 +316,53 @@ func (b *BinanceFuture) CreateOrderMarket(side model.SideType, pair string, quan
 	}, nil
 }
 
+func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
+	orderService := b.client.NewCreateOrderService().
+		Symbol(pair).
+		Type(futures.OrderTypeTakeProfit).
+		Side(futures.SideType(side)).
+		StopPrice(b.formatPrice(pair, limit)).
+		Price(b.formatPrice(pair, limit))
+
+	if quantity > 0 {
+		err := b.validate(pair, quantity)
+		if err != nil {
+			return model.Order{}, err
+		}
+		orderService = orderService.Quantity(b.formatQuantity(pair, quantity))
+	} else {
+		orderService = orderService.ClosePosition(true)
+	}
+
+	order, err := orderService.
+		Do(b.ctx)
+	if err != nil {
+		return model.Order{}, err
+	}
+
+	cost, err := strconv.ParseFloat(order.CumQuote, 64)
+	if err != nil {
+		return model.Order{}, err
+	}
+
+	quantity, err = strconv.ParseFloat(order.ExecutedQuantity, 64)
+	if err != nil {
+		return model.Order{}, err
+	}
+
+	return model.Order{
+		ExchangeID: order.OrderID,
+		CreatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
+		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
+		Pair:       order.Symbol,
+		Side:       model.SideType(order.Side),
+		Type:       model.OrderType(order.Type),
+		Status:     model.OrderStatusType(order.Status),
+		Price:      cost / quantity,
+		Quantity:   quantity,
+	}, nil
+}
+
 func (b *BinanceFuture) CreateOrderMarketQuote(_ model.SideType, _ string, _ float64) (model.Order, error) {
 	panic("not implemented")
 }

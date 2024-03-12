@@ -576,6 +576,9 @@ func (b *Binance) CandlesByPeriod(ctx context.Context, pair, period string,
 func (b *Binance) CancelOpenOrders(pair string) error {
 	return nil
 }
+func (b *Binance) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
+	return model.Order{}, nil
+}
 
 func CandleFromKline(pair string, k binance.Kline) model.Candle {
 	t := time.Unix(0, k.OpenTime*int64(time.Millisecond))
