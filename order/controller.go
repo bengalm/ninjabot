@@ -565,13 +565,13 @@ func (c *Controller) TakeProfit(side model.SideType, pair string, quantity float
 		c.notifyError(err)
 		return model.Order{}, err
 	}
-
-	err = c.storage.CreateOrder(&order)
-	if err != nil {
-		c.notifyError(err)
-		return model.Order{}, err
-	}
-	go c.orderFeed.Publish(order, true)
+	//
+	//err = c.storage.CreateOrder(&order)
+	//if err != nil {
+	//	c.notifyError(err)
+	//	return model.Order{}, err
+	//}
+	//go c.orderFeed.Publish(order, true)
 	log.Infof("[ORDER CREATED] %s", order)
 	return order, nil
 }

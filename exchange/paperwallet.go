@@ -594,9 +594,13 @@ func (p *PaperWallet) CreateOrderStop(pair string, size float64, limit float64) 
 	defer p.Unlock()
 
 	if size == 0 {
-		return model.Order{}, ErrInvalidQuantity
-	}
+		asset, _, err := p.Position(pair)
+		if err != nil {
+			return model.Order{}, ErrInvalidQuantity
+		}
 
+		size = asset
+	}
 	err := p.validateFunds(model.SideTypeSell, pair, size, limit, false)
 	if err != nil {
 		return model.Order{}, err
@@ -635,8 +639,8 @@ func (p *PaperWallet) TakeProfit(side model.SideType, pair string, quantity floa
 		CreatedAt:  p.lastCandle[pair].Time,
 		UpdatedAt:  p.lastCandle[pair].Time,
 		Pair:       pair,
-		Side:       model.SideTypeSell,
-		Type:       model.OrderTypeStopLossLimit,
+		Side:       side,
+		Type:       model.OrderTypeTakeProfit,
 		Status:     model.OrderStatusTypeNew,
 		Price:      limit,
 		Stop:       &limit,
