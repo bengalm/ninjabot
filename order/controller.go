@@ -614,3 +614,15 @@ func (c *Controller) CancelOpenOrders(pair string) error {
 	log.Infof("[ORDER CancelOpenOrders] %s", pair)
 	return nil
 }
+func (c *Controller) OpenOrders(pair string) ([]model.Order, error) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	log.Infof("[ORDER] OpenOrders order for %s", pair)
+	orders, err := c.exchange.OpenOrders(pair)
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("[ORDER CancelOpenOrders] %s", pair)
+	return orders, nil
+}

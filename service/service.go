@@ -34,6 +34,7 @@ type Broker interface {
 	Cancel(model.Order) error
 	CancelOpenOrders(pair string) error
 	TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error)
+	OpenOrders(pair string) ([]model.Order, error)
 }
 
 type Notifier interface {

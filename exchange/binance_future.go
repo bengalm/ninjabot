@@ -378,6 +378,17 @@ func (b *BinanceFuture) CancelOpenOrders(pair string) error {
 	err := b.client.NewCancelAllOpenOrdersService().Symbol(pair).Do(b.ctx)
 	return err
 }
+func (b *BinanceFuture) OpenOrders(pair string) ([]model.Order, error) {
+	result, err := b.client.NewListOpenOrdersService().Symbol(pair).Do(b.ctx)
+	if err != nil {
+		return nil, err
+	}
+	orders := make([]model.Order, 0)
+	for _, order := range result {
+		orders = append(orders, newFutureOrder(order))
+	}
+	return orders, nil
+}
 
 func (b *BinanceFuture) Orders(pair string, limit int) ([]model.Order, error) {
 	result, err := b.client.NewListOrdersService().
