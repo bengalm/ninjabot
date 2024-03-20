@@ -45,6 +45,10 @@ type BinanceFuture struct {
 	PairOptions      []PairOption
 }
 
+func (b *BinanceFuture) Client() *futures.Client {
+	return b.client
+}
+
 type BinanceFutureOption func(*BinanceFuture)
 
 // WithBinanceFuturesHeikinAshiCandle will use Heikin Ashi candle instead of regular candle
