@@ -225,7 +225,10 @@ func (b *Binance) CreateOrderStop(pair string, quantity float64, limit float64) 
 
 func (b *Binance) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
+		fmt.Printf("---formatPrice before pair: %s value: %f tickSize: %f quotePrecision: %d \n", pair, value, info.TickSize, info.QuotePrecision)
 		value = common.AmountToLotSize(info.TickSize, info.QuotePrecision, value)
+		fmt.Printf("---formatPrice after pair: %s value: %f tickSize: %f quotePrecision: %d \n", pair, value, info.TickSize, info.QuotePrecision)
+
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }
