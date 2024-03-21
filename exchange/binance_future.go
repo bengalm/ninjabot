@@ -119,6 +119,7 @@ func NewBinanceFuture(ctx context.Context, options ...BinanceFutureOption) (*Bin
 			QuoteAsset:         info.QuoteAsset,
 			BaseAssetPrecision: info.BaseAssetPrecision,
 			QuotePrecision:     info.QuotePrecision,
+			PricePrecision:     info.PricePrecision,
 		}
 		for _, filter := range info.Filters {
 			if typ, ok := filter["filterType"]; ok {
@@ -225,7 +226,7 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 
 func (b *BinanceFuture) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		value = common.AmountToLotSize(info.TickSize, info.QuotePrecision, value)
+		value = common.AmountToLotSize(info.TickSize, info.PricePrecision, value)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }

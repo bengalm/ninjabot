@@ -37,6 +37,7 @@ type AssetInfo struct {
 	TickSize    float64
 
 	QuotePrecision     int
+	PricePrecision     int
 	BaseAssetPrecision int
 }
 
