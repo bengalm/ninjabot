@@ -226,9 +226,19 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 
 func (b *BinanceFuture) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		value = common.AmountToLotSize(info.TickSize, info.PricePrecision, value)
+		precision := getDecimalPrecision(info.TickSize)
+		value = common.AmountToLotSize(info.TickSize, precision, value)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+func getDecimalPrecision(num float64) int {
+	str := strconv.FormatFloat(num, 'f', -1, 64)
+	parts := strings.Split(str, ".")
+	if len(parts) != 2 {
+		return 0
+	}
+	return len(parts[1])
 }
 
 func (b *BinanceFuture) formatQuantity(pair string, value float64) string {
