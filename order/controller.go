@@ -308,7 +308,7 @@ func (c *Controller) updatePosition(o *model.Order) {
 }
 
 func (c *Controller) notify(message string) {
-	log.Info(message)
+	fmt.Printf(message)
 	if c.notifier != nil {
 		c.notifier.Notify(message)
 	}
