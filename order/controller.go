@@ -510,12 +510,12 @@ func (c *Controller) CreateOrderMarketQuote(side model.SideType, pair string, am
 	return order, err
 }
 
-func (c *Controller) CreateOrderMarket(side model.SideType, pair string, size float64) (model.Order, error) {
+func (c *Controller) CreateOrderMarket(side model.SideType, pair string, size float64, reduceOnly bool) (model.Order, error) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	log.Infof("[ORDER] Creating MARKET %s order for %s", side, pair)
-	order, err := c.exchange.CreateOrderMarket(side, pair, size)
+	log.Infof("[ORDER] Creating MARKET %s order for %s size %f", side, pair, size)
+	order, err := c.exchange.CreateOrderMarket(side, pair, size, reduceOnly)
 	if err != nil {
 		c.notifyError(err)
 		return model.Order{}, err

@@ -283,7 +283,7 @@ func (b *Binance) CreateOrderLimit(side model.SideType, pair string,
 	}, nil
 }
 
-func (b *Binance) CreateOrderMarket(side model.SideType, pair string, quantity float64) (model.Order, error) {
+func (b *Binance) CreateOrderMarket(side model.SideType, pair string, quantity float64, reduceOnly bool) (model.Order, error) {
 	err := b.validate(pair, quantity)
 	if err != nil {
 		return model.Order{}, err
