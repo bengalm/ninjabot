@@ -39,7 +39,7 @@ func (s *Scheduler) BuyWhen(size float64, condition func(df *ninjabot.Dataframe)
 func (s *Scheduler) Update(df *ninjabot.Dataframe, broker service.Broker) {
 	s.orderConditions = lo.Filter[OrderCondition](s.orderConditions, func(oc OrderCondition, _ int) bool {
 		if oc.Condition(df) {
-			_, err := broker.CreateOrderMarket(oc.Side, s.pair, oc.Size)
+			_, err := broker.CreateOrderMarket(oc.Side, s.pair, oc.Size, false)
 			if err != nil {
 				log.Error(err)
 				return true

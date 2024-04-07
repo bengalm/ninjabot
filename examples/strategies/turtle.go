@@ -47,7 +47,7 @@ func (e *Turtle) OnCandle(df *ninjabot.Dataframe, broker service.Broker) {
 	}
 
 	if assetPosition > 0 && closePrice <= lowest {
-		_, err := broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, assetPosition)
+		_, err := broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, assetPosition, false)
 		if err != nil {
 			log.Error(err)
 		}

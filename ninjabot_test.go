@@ -38,7 +38,7 @@ func (e *fakeStrategy) OnCandle(df *Dataframe, broker service.Broker) {
 	}
 
 	if quotePosition > 0 && df.Close.Crossover(df.Metadata["ema9"]) {
-		_, err := broker.CreateOrderMarket(SideTypeBuy, df.Pair, quotePosition/closePrice*0.5)
+		_, err := broker.CreateOrderMarket(SideTypeBuy, df.Pair, quotePosition/closePrice*0.5, false)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -46,7 +46,7 @@ func (e *fakeStrategy) OnCandle(df *Dataframe, broker service.Broker) {
 
 	if assetPosition > 0 &&
 		df.Close.Crossunder(df.Metadata["ema9"]) {
-		_, err := broker.CreateOrderMarket(SideTypeSell, df.Pair, assetPosition)
+		_, err := broker.CreateOrderMarket(SideTypeSell, df.Pair, assetPosition, false)
 		if err != nil {
 			log.Fatal(err)
 		}

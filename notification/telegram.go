@@ -299,7 +299,7 @@ func (t telegram) SellHandle(m *tb.Message) {
 		}
 
 		amount = amount * asset / 100.0
-		order, err := t.orderController.CreateOrderMarket(model.SideTypeSell, pair, amount)
+		order, err := t.orderController.CreateOrderMarket(model.SideTypeSell, pair, amount, false)
 		if err != nil {
 			return
 		}

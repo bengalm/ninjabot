@@ -58,7 +58,7 @@ func (e *CrossEMA) OnCandle(df *ninjabot.Dataframe, broker service.Broker) {
 		df.Metadata["ema8"].Crossover(df.Metadata["sma21"]) { // trade signal (EMA8 > SMA21)
 
 		amount := quotePosition / closePrice // calculate amount of asset to buy
-		_, err := broker.CreateOrderMarket(ninjabot.SideTypeBuy, df.Pair, amount)
+		_, err := broker.CreateOrderMarket(ninjabot.SideTypeBuy, df.Pair, amount, false)
 		if err != nil {
 			log.Error(err)
 		}
@@ -69,7 +69,7 @@ func (e *CrossEMA) OnCandle(df *ninjabot.Dataframe, broker service.Broker) {
 	if assetPosition > 0 &&
 		df.Metadata["ema8"].Crossunder(df.Metadata["sma21"]) { // trade signal (EMA8 < SMA21)
 
-		_, err = broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, assetPosition)
+		_, err = broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, assetPosition, false)
 		if err != nil {
 			log.Error(err)
 		}

@@ -75,7 +75,7 @@ func (t trailing) OnPartialCandle(df *model.Dataframe, broker service.Broker) {
 		}
 
 		if asset > 0 {
-			_, err = broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, asset)
+			_, err = broker.CreateOrderMarket(ninjabot.SideTypeSell, df.Pair, asset, false)
 			if err != nil {
 				log.Error(err)
 				return
