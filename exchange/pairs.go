@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/adshao/go-binance/v2"
 	"github.com/adshao/go-binance/v2/futures"
@@ -30,7 +31,14 @@ func init() {
 }
 
 func SplitAssetQuote(pair string) (asset string, quote string) {
-	data := pairAssetQuoteMap[pair]
+	data, ok := pairAssetQuoteMap[pair]
+	if !ok {
+		if strings.Contains(pair, "USDT") {
+			quoteNow := pair[len(pair)-4:]
+			assetNow := pair[:len(pair)-len(quote)]
+			return assetNow, quoteNow
+		}
+	}
 	return data.Asset, data.Quote
 }
 
