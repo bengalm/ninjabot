@@ -340,15 +340,13 @@ func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity fl
 		Symbol(pair).
 		Type(futures.OrderTypeTakeProfit).
 		Side(futures.SideType(side)).
-		StopPrice(b.formatPrice(pair, limit)).
-		Price(b.formatPrice(pair, limit))
-
+		StopPrice(b.formatPrice(pair, limit))
 	if quantity > 0 {
 		err := b.validate(pair, quantity)
 		if err != nil {
 			return model.Order{}, err
 		}
-		orderService = orderService.Quantity(b.formatQuantity(pair, quantity))
+		orderService = orderService.Quantity(b.formatQuantity(pair, quantity)).Price(b.formatPrice(pair, limit))
 	} else {
 		orderService.Type(futures.OrderTypeTakeProfitMarket)
 		orderService = orderService.ClosePosition(true)
