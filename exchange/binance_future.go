@@ -350,6 +350,7 @@ func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity fl
 		}
 		orderService = orderService.Quantity(b.formatQuantity(pair, quantity))
 	} else {
+		orderService.Type(futures.OrderTypeTakeProfitMarket)
 		orderService = orderService.ClosePosition(true)
 	}
 
