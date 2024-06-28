@@ -83,6 +83,10 @@ func NewCSVFeed(targetTimeframe string, feeds ...PairFeed) (*CSVFeed, error) {
 		if err != nil {
 			return nil, err
 		}
+		if len(csvLines) < 1 {
+			fmt.Printf("empty file: %s\n", feed.File)
+			continue
+		}
 
 		var candles []model.Candle
 		ha := model.NewHeikinAshi()
