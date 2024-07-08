@@ -223,7 +223,37 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 		Quantity:   quantity,
 	}, nil
 }
+func (b *BinanceFuture) CreateOrderTrailingStop(pair string, side model.SideType, limit float64, quantity float64, callBackRate string) (model.Order, error) {
+	formatPrice := b.formatPrice(pair, limit)
+	formatQuantity := b.formatQuantity(pair, quantity)
+	order, err := b.client.NewCreateOrderService().
+		Symbol(pair).
+		Type(futures.OrderTypeTrailingStopMarket).
+		TimeInForce(futures.TimeInForceTypeGTC).
+		ActivationPrice(formatPrice).
+		WorkingType(futures.WorkingTypeMarkPrice).
+		Side(futures.SideType(side)).
+		CallbackRate(callBackRate).
+		Quantity(formatQuantity).
+		Do(context.TODO())
+	if err != nil {
+		return model.Order{}, err
+	}
+	price, _ := strconv.ParseFloat(order.Price, 64)
+	quantity, _ = strconv.ParseFloat(order.OrigQuantity, 64)
 
+	return model.Order{
+		ExchangeID: order.OrderID,
+		CreatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
+		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
+		Pair:       pair,
+		Side:       model.SideType(order.Side),
+		Type:       model.OrderType(order.Type),
+		Status:     model.OrderStatusType(order.Status),
+		Price:      price,
+		Quantity:   quantity,
+	}, nil
+}
 func (b *BinanceFuture) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
 		precision := getDecimalPrecision(info.TickSize)

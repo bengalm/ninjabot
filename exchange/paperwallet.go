@@ -621,6 +621,38 @@ func (p *PaperWallet) CreateOrderStop(pair string, size float64, limit float64) 
 	p.orders = append(p.orders, order)
 	return order, nil
 }
+func (p *PaperWallet) CreateOrderTrailingStop(pair string, side model.SideType, limit float64, quantity float64, callBackRate string) (model.Order, error) {
+	p.Lock()
+	defer p.Unlock()
+
+	if quantity == 0 {
+		asset, _, err := p.Position(pair)
+		if err != nil {
+			return model.Order{}, ErrInvalidQuantity
+		}
+
+		quantity = asset
+	}
+	err := p.validateFunds(model.SideTypeSell, pair, quantity, limit, false)
+	if err != nil {
+		return model.Order{}, err
+	}
+
+	order := model.Order{
+		ExchangeID: p.ID(),
+		CreatedAt:  p.lastCandle[pair].Time,
+		UpdatedAt:  p.lastCandle[pair].Time,
+		Pair:       pair,
+		Side:       side,
+		Type:       model.OrderTypeStopLossLimit,
+		Status:     model.OrderStatusTypeNew,
+		Price:      limit,
+		Stop:       &limit,
+		Quantity:   quantity,
+	}
+	p.orders = append(p.orders, order)
+	return order, nil
+}
 func (p *PaperWallet) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
 	p.Lock()
 	defer p.Unlock()

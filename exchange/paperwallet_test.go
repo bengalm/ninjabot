@@ -194,7 +194,7 @@ func TestPaperWallet_OrderLimit(t *testing.T) {
 func TestPaperWallet_OrderMarket(t *testing.T) {
 	wallet := NewPaperWallet(context.Background(), "USDT", WithPaperAsset("USDT", 100))
 	wallet.OnCandle(model.Candle{Pair: "BTCUSDT", Close: 50})
-	order, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1)
+	order, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1, false)
 	require.NoError(t, err)
 
 	// create buy order
@@ -209,7 +209,7 @@ func TestPaperWallet_OrderMarket(t *testing.T) {
 	require.Equal(t, 50.0, wallet.avgLongPrice["BTCUSDT"])
 
 	// insufficient funds
-	order, err = wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 100)
+	order, err = wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 100, false)
 	require.Equal(t, &OrderError{
 		Err:      ErrInsufficientFunds,
 		Pair:     "BTCUSDT",
@@ -218,7 +218,7 @@ func TestPaperWallet_OrderMarket(t *testing.T) {
 
 	// sell
 	wallet.OnCandle(model.Candle{Pair: "BTCUSDT", Close: 100})
-	order, err = wallet.CreateOrderMarket(model.SideTypeSell, "BTCUSDT", 1)
+	order, err = wallet.CreateOrderMarket(model.SideTypeSell, "BTCUSDT", 1, false)
 	require.NoError(t, err)
 	require.Equal(t, 1.0, order.Quantity)
 	require.Equal(t, 100.0, order.Price)
@@ -232,7 +232,7 @@ func TestPaperWallet_OrderMarket(t *testing.T) {
 func TestPaperWallet_OrderOCO(t *testing.T) {
 	wallet := NewPaperWallet(context.Background(), "USDT", WithPaperAsset("USDT", 50))
 	wallet.OnCandle(model.Candle{Pair: "BTCUSDT", Close: 50})
-	_, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1)
+	_, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1, false)
 	require.NoError(t, err)
 
 	orders, err := wallet.CreateOrderOCO(model.SideTypeSell, "BTCUSDT", 1, 100, 40, 39)
@@ -270,7 +270,7 @@ func TestPaperWallet_OrderOCO(t *testing.T) {
 
 func TestPaperWallet_Order(t *testing.T) {
 	wallet := NewPaperWallet(context.Background(), "USDT", WithPaperAsset("USDT", 100))
-	expectOrder, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1)
+	expectOrder, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1, false)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), expectOrder.ExchangeID)
 
@@ -370,7 +370,7 @@ func TestPaperWallet_CreateOrderStop(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		wallet := NewPaperWallet(context.Background(), "USDT", WithPaperAsset("USDT", 100))
 		wallet.OnCandle(model.Candle{Pair: "BTCUSDT", Close: 100})
-		_, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1)
+		_, err := wallet.CreateOrderMarket(model.SideTypeBuy, "BTCUSDT", 1, false)
 		require.NoError(t, err)
 
 		order, err := wallet.CreateOrderStop("BTCUSDT", 1, 50)

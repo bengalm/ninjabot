@@ -223,6 +223,9 @@ func (b *Binance) CreateOrderStop(pair string, quantity float64, limit float64) 
 	}, nil
 }
 
+func (b *Binance) CreateOrderTrailingStop(pair string, side model.SideType, limit float64, quantity float64, callBackRate string) (model.Order, error) {
+	return model.Order{}, nil
+}
 func (b *Binance) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
 		fmt.Printf("---formatPrice before pair: %s value: %f tickSize: %f quotePrecision: %d \n", pair, value, info.TickSize, info.QuotePrecision)

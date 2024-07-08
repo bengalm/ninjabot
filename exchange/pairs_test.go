@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,4 +32,13 @@ func TestUpdatePairFile(t *testing.T) {
 	t.Skip() // it is not a test, just utility function to update pairs list
 	err := updateParisFile()
 	require.NoError(t, err)
+}
+func TestASD(t *testing.T) {
+	symbol := "BTCUSDT"
+	// 获取Quote和Asset
+	quote := symbol[len(symbol)-4:]          // 从倒数第四个字符开始取到末尾
+	asset := symbol[:len(symbol)-len(quote)] // 从开头取到倒数第四个字符前一个
+
+	fmt.Println(asset)
+	fmt.Println(quote)
 }

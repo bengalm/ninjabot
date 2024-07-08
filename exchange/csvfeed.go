@@ -235,7 +235,14 @@ func isLastCandlePeriod(t time.Time, fromTimeframe, targetTimeframe string) (boo
 func (c *CSVFeed) resample(pair, sourceTimeframe, targetTimeframe string) error {
 	sourceKey := c.feedTimeframeKey(pair, sourceTimeframe)
 	targetKey := c.feedTimeframeKey(pair, targetTimeframe)
-
+	defer func(pair string) {
+		a := recover()
+		if a != nil {
+			fmt.Println("-----")
+			fmt.Println(pair)
+			fmt.Println(a)
+		}
+	}(pair)
 	var i int
 	for ; i < len(c.CandlePairTimeFrame[sourceKey]); i++ {
 		if ok, err := isFistCandlePeriod(c.CandlePairTimeFrame[sourceKey][i].Time, sourceTimeframe,

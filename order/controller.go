@@ -179,6 +179,7 @@ type Position struct {
 }
 
 func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
+	log.Infof("order update: %+v", order)
 	price := order.Price
 	if order.Type == model.OrderTypeStopLoss || order.Type == model.OrderTypeStopLossLimit {
 		price = *order.Stop
@@ -202,7 +203,9 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 		quantity := math.Min(p.Quantity, order.Quantity)
 		order.Profit = (price - p.AvgPrice) / p.AvgPrice
 		order.ProfitValue = (price - p.AvgPrice) * quantity
-
+		if order.Side == model.SideTypeBuy {
+			order.ProfitValue = -order.ProfitValue
+		}
 		result = &Result{
 			CreatedAt:     order.CreatedAt,
 			Pair:          order.Pair,
@@ -554,7 +557,25 @@ func (c *Controller) CreateOrderStop(pair string, size float64, limit float64) (
 	log.Infof("[ORDER CREATED] %s", order)
 	return order, nil
 }
+func (c *Controller) CreateOrderTrailingStop(pair string, side model.SideType, limit float64, quantity float64, callBackRate string) (model.Order, error) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 
+	log.Infof("[ORDER] Creating TrailingStop order for %s", pair)
+	order, err := c.exchange.CreateOrderTrailingStop(pair, side, limit, quantity, callBackRate)
+	if err != nil {
+		c.notifyError(err)
+		return model.Order{}, err
+	}
+	err = c.storage.CreateOrder(&order)
+	if err != nil {
+		c.notifyError(err)
+		return model.Order{}, err
+	}
+	go c.orderFeed.Publish(order, true)
+	log.Infof("[ORDER CREATED] %s", order)
+	return order, nil
+}
 func (c *Controller) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
