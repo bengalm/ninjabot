@@ -32,14 +32,15 @@ var (
 )
 
 type Order struct {
-	ID         int64           `db:"id" json:"id" gorm:"primaryKey,autoIncrement"`
-	ExchangeID int64           `db:"exchange_id" json:"exchange_id"`
-	Pair       string          `db:"pair" json:"pair"`
-	Side       SideType        `db:"side" json:"side"`
-	Type       OrderType       `db:"type" json:"type"`
-	Status     OrderStatusType `db:"status" json:"status"`
-	Price      float64         `db:"price" json:"price"`
-	Quantity   float64         `db:"quantity" json:"quantity"`
+	ID            int64           `db:"id" json:"id" gorm:"primaryKey,autoIncrement"`
+	ExchangeID    int64           `db:"exchange_id" json:"exchange_id"`
+	ClientOrderID string          `db:"-" json:"-"`
+	Pair          string          `db:"pair" json:"pair"`
+	Side          SideType        `db:"side" json:"side"`
+	Type          OrderType       `db:"type" json:"type"`
+	Status        OrderStatusType `db:"status" json:"status"`
+	Price         float64         `db:"price" json:"price"`
+	Quantity      float64         `db:"quantity" json:"quantity"`
 
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`

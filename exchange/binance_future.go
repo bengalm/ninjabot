@@ -485,15 +485,16 @@ func newFutureOrder(order *futures.Order) model.Order {
 	}
 
 	return model.Order{
-		ExchangeID: order.OrderID,
-		Pair:       order.Symbol,
-		CreatedAt:  time.Unix(0, order.Time*int64(time.Millisecond)),
-		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
-		Side:       model.SideType(order.Side),
-		Type:       model.OrderType(order.Type),
-		Status:     model.OrderStatusType(order.Status),
-		Price:      price,
-		Quantity:   quantity,
+		ExchangeID:    order.OrderID,
+		ClientOrderID: order.ClientOrderID,
+		Pair:          order.Symbol,
+		CreatedAt:     time.Unix(0, order.Time*int64(time.Millisecond)),
+		UpdatedAt:     time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
+		Side:          model.SideType(order.Side),
+		Type:          model.OrderType(order.Type),
+		Status:        model.OrderStatusType(order.Status),
+		Price:         price,
+		Quantity:      quantity,
 	}
 }
 
