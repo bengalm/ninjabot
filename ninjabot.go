@@ -125,7 +125,7 @@ func WithStorage(storage storage.Storage) Option {
 
 // WithLogLevel sets the log level. eg: log.DebugLevel, log.InfoLevel, log.WarnLevel, log.ErrorLevel, log.FatalLevel
 func WithLogLevel(level log.Level) Option {
-	return func(bot *NinjaBot) {
+	return func(_ *NinjaBot) {
 		log.SetLevel(level)
 	}
 }
@@ -241,8 +241,8 @@ func (n *NinjaBot) Summary() {
 	fmt.Println("------ RETURN -------")
 	totalReturn := 0.0
 	returnsPercent := make([]float64, len(returns))
-	for _, p := range returns {
-		returnsPercent = append(returnsPercent, p*100)
+	for i, p := range returns {
+		returnsPercent[i] = p * 100
 		totalReturn += p
 	}
 	hist := histogram.Hist(15, returnsPercent)
