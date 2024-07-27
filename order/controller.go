@@ -203,9 +203,9 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 		quantity := math.Min(p.Quantity, order.Quantity)
 		order.Profit = (price - p.AvgPrice) / p.AvgPrice
 		order.ProfitValue = (price - p.AvgPrice) * quantity
-		if order.Side == model.SideTypeBuy {
-			order.ProfitValue = -order.ProfitValue
-		}
+		//if order.Side == model.SideTypeBuy {
+		//	order.ProfitValue = -order.ProfitValue
+		//}
 		result = &Result{
 			CreatedAt:     order.CreatedAt,
 			Pair:          order.Pair,
@@ -260,6 +260,10 @@ func (c *Controller) SetNotifier(notifier service.Notifier) {
 func (c *Controller) OnCandle(candle model.Candle) {
 	c.lastPrice[candle.Pair] = candle.Close
 }
+func (c *Controller) LastPrice(pair string) (float64, bool) {
+	price, ok := c.lastPrice[pair]
+	return price, ok
+}
 
 func (c *Controller) updatePosition(o *model.Order) {
 	// get filled orders before the current order
@@ -311,7 +315,7 @@ func (c *Controller) updatePosition(o *model.Order) {
 }
 
 func (c *Controller) notify(message string) {
-	fmt.Printf(message)
+	fmt.Println(message)
 	if c.notifier != nil {
 		c.notifier.Notify(message)
 	}

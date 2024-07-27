@@ -601,17 +601,23 @@ func (p *PaperWallet) CreateOrderStop(pair string, size float64, limit float64) 
 
 		size = asset
 	}
-	err := p.validateFunds(model.SideTypeSell, pair, size, limit, false)
+
+	sideType := model.SideTypeSell
+	if limit < 0 {
+		sideType = model.SideTypeBuy
+		limit = -limit
+	}
+
+	err := p.validateFunds(sideType, pair, size, limit, false)
 	if err != nil {
 		return model.Order{}, err
 	}
-
 	order := model.Order{
 		ExchangeID: p.ID(),
 		CreatedAt:  p.lastCandle[pair].Time,
 		UpdatedAt:  p.lastCandle[pair].Time,
 		Pair:       pair,
-		Side:       model.SideTypeSell,
+		Side:       sideType,
 		Type:       model.OrderTypeStopLossLimit,
 		Status:     model.OrderStatusTypeNew,
 		Price:      limit,
