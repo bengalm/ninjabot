@@ -3,6 +3,7 @@ package exchange
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"time"
@@ -100,13 +101,14 @@ func NewBinanceFuture(ctx context.Context, options ...BinanceFutureOption) (*Bin
 	for _, option := range exchange.PairOptions {
 		_, err = exchange.client.NewChangeLeverageService().Symbol(option.Pair).Leverage(option.Leverage).Do(ctx)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "change leverage for %s fail", option.Pair)
+
 		}
 
 		err = exchange.client.NewChangeMarginTypeService().Symbol(option.Pair).MarginType(option.MarginType).Do(ctx)
 		if err != nil {
 			if apiError, ok := err.(*common.APIError); !ok || apiError.Code != ErrNoNeedChangeMarginType {
-				return nil, err
+				return nil, errors.Wrapf(err, "change margin type for %s fail", option.Pair)
 			}
 		}
 	}
