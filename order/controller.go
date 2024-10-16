@@ -185,6 +185,7 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 		price = *order.Stop
 	}
 
+	beforPrice := p.AvgPrice
 	if p.Side == order.Side {
 		p.AvgPrice = (p.AvgPrice*p.Quantity + price*order.Quantity) / (p.Quantity + order.Quantity)
 		p.Quantity += order.Quantity
@@ -203,6 +204,13 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 		quantity := math.Min(p.Quantity, order.Quantity)
 		order.Profit = (price - p.AvgPrice) / p.AvgPrice
 		order.ProfitValue = (price - p.AvgPrice) * quantity
+
+		if (p.Side == model.SideTypeSell && beforPrice < order.Price && order.Profit > 0) ||
+			(p.Side == model.SideTypeBuy && beforPrice > order.Price && order.Profit < 0) {
+			order.Profit = -order.Profit
+			order.ProfitValue = -order.ProfitValue
+		}
+
 		//if order.Side == model.SideTypeBuy {
 		//	order.ProfitValue = -order.ProfitValue
 		//}
