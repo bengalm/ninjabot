@@ -322,3 +322,8 @@ func (c CSVFeed) CandlesSubscription(_ context.Context, pair, timeframe string) 
 	}()
 	return ccandle, cerr
 }
+func (c CSVFeed) AccountSubscription(ctx context.Context) (chan model.Order, chan error) {
+	ccandle := make(chan model.Order)
+	cerr := make(chan error)
+	return ccandle, cerr
+}

@@ -184,7 +184,6 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 	if order.Type == model.OrderTypeStopLoss || order.Type == model.OrderTypeStopLossLimit {
 		price = *order.Stop
 	}
-
 	beforPrice := p.AvgPrice
 	if p.Side == order.Side {
 		p.AvgPrice = (p.AvgPrice*p.Quantity + price*order.Quantity) / (p.Quantity + order.Quantity)
@@ -205,9 +204,10 @@ func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
 		order.Profit = (price - p.AvgPrice) / p.AvgPrice
 		order.ProfitValue = (price - p.AvgPrice) * quantity
 
-		if (p.Side == model.SideTypeSell && beforPrice < order.Price && order.Profit > 0) ||
-			(p.Side == model.SideTypeBuy && beforPrice > order.Price && order.Profit < 0) {
-			order.Profit = -order.Profit
+		if (order.Side == model.SideTypeSell && beforPrice < order.Price && order.ProfitValue < 0) ||
+			(order.Side == model.SideTypeSell && beforPrice > order.Price && order.ProfitValue > 0) ||
+			(order.Side == model.SideTypeBuy && beforPrice > order.Price && order.ProfitValue < 0) ||
+			(order.Side == model.SideTypeBuy && beforPrice < order.Price && order.ProfitValue > 0) {
 			order.ProfitValue = -order.ProfitValue
 		}
 
@@ -356,48 +356,48 @@ func (c *Controller) processTrade(order *model.Order) {
 func (c *Controller) updateOrders() {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-
-	//pending orders
-	orders, err := c.storage.Orders(storage.WithStatusIn(
-		model.OrderStatusTypeNew,
-		model.OrderStatusTypePartiallyFilled,
-		model.OrderStatusTypePendingCancel,
-	))
-	if err != nil {
-		c.notifyError(err)
-		c.mtx.Unlock()
-		return
-	}
-
-	// For each pending order, check for updates
-	var updatedOrders []model.Order
-	for _, order := range orders {
-		excOrder, err := c.exchange.Order(order.Pair, order.ExchangeID)
-		if err != nil {
-			log.WithField("id", order.ExchangeID).Error("orderControler/get: ", err)
-			continue
-		}
-
-		// no status change
-		if excOrder.Status == order.Status {
-			continue
-		}
-
-		excOrder.ID = order.ID
-		err = c.storage.UpdateOrder(&excOrder)
-		if err != nil {
-			c.notifyError(err)
-			continue
-		}
-
-		log.Infof("[ORDER %s] %s", excOrder.Status, excOrder)
-		updatedOrders = append(updatedOrders, excOrder)
-	}
-
-	for _, processOrder := range updatedOrders {
-		c.processTrade(&processOrder)
-		c.orderFeed.Publish(processOrder, false)
-	}
+	//
+	////pending orders
+	//orders, err := c.storage.Orders(storage.WithStatusIn(
+	//	model.OrderStatusTypeNew,
+	//	model.OrderStatusTypePartiallyFilled,
+	//	model.OrderStatusTypePendingCancel,
+	//))
+	//if err != nil {
+	//	c.notifyError(err)
+	//	c.mtx.Unlock()
+	//	return
+	//}
+	//
+	//// For each pending order, check for updates
+	//var updatedOrders []model.Order
+	//for _, order := range orders {
+	//	excOrder, err := c.exchange.Order(order.Pair, order.ExchangeID)
+	//	if err != nil {
+	//		log.WithField("id", order.ExchangeID).Error("orderControler/get: ", err)
+	//		continue
+	//	}
+	//
+	//	// no status change
+	//	if excOrder.Status == order.Status {
+	//		continue
+	//	}
+	//
+	//	excOrder.ID = order.ID
+	//	err = c.storage.UpdateOrder(&excOrder)
+	//	if err != nil {
+	//		c.notifyError(err)
+	//		continue
+	//	}
+	//
+	//	log.Infof("[ORDER %s] %s", excOrder.Status, excOrder)
+	//	updatedOrders = append(updatedOrders, excOrder)
+	//}
+	//
+	//for _, processOrder := range updatedOrders {
+	//	c.processTrade(&processOrder)
+	//	c.orderFeed.Publish(processOrder, false)
+	//}
 }
 
 func (c *Controller) Status() Status {

@@ -20,6 +20,7 @@ type Feeder interface {
 	CandlesByPeriod(ctx context.Context, pair, period string, start, end time.Time) ([]model.Candle, error)
 	CandlesByLimit(ctx context.Context, pair, period string, limit int) ([]model.Candle, error)
 	CandlesSubscription(ctx context.Context, pair, timeframe string) (chan model.Candle, chan error)
+	AccountSubscription(ctx context.Context) (chan model.Order, chan error)
 }
 
 type Broker interface {

@@ -3,12 +3,12 @@ package exchange
 import (
 	"context"
 	"fmt"
+	"github.com/adshao/go-binance/v2"
 	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/adshao/go-binance/v2"
 	"github.com/adshao/go-binance/v2/common"
 	"github.com/adshao/go-binance/v2/futures"
 	"github.com/jpillora/backoff"
@@ -727,4 +727,87 @@ func FutureCandleFromWsKline(pair string, k futures.WsKline) model.Candle {
 	candle.Complete = k.IsFinal
 	candle.Metadata = make(map[string]float64)
 	return candle
+}
+
+func (b *BinanceFuture) AccountSubscription(ctx context.Context) (chan model.Order, chan error) {
+	orders := make(chan model.Order)
+	cerr := make(chan error)
+	key, err := b.client.NewStartUserStreamService().Do(ctx)
+	if err != nil {
+		cerr <- err
+		return nil, nil
+	}
+	ticker := time.NewTicker(40 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case t := <-ticker.C:
+				fmt.Println(t)
+				err2 := b.client.NewKeepaliveUserStreamService().ListenKey(key).Do(ctx)
+				if err2 != nil {
+					cerr <- err2
+				}
+			}
+		}
+	}()
+
+	go func() {
+		ba := &backoff.Backoff{
+			Min: 100 * time.Millisecond,
+			Max: 1 * time.Second,
+		}
+
+		for {
+			done, _, err := futures.WsUserDataServe(key, func(event *futures.WsUserDataEvent) {
+				if event.Event == futures.UserDataEventTypeOrderTradeUpdate {
+					wsOrderTradeUpdate := event.OrderTradeUpdate
+					price, err := strconv.ParseFloat(wsOrderTradeUpdate.AveragePrice, 64)
+					if err != nil {
+						cerr <- err
+						return
+					}
+
+					quantity, err := strconv.ParseFloat(wsOrderTradeUpdate.AccumulatedFilledQty, 64)
+					if err != nil {
+						cerr <- err
+						return
+					}
+					order := model.Order{
+						ExchangeID: wsOrderTradeUpdate.ID,
+						CreatedAt:  time.Unix(0, wsOrderTradeUpdate.TradeTime*int64(time.Millisecond)),
+						UpdatedAt:  time.Unix(0, wsOrderTradeUpdate.TradeTime*int64(time.Millisecond)),
+						Pair:       wsOrderTradeUpdate.Symbol,
+						Side:       model.SideType(wsOrderTradeUpdate.Side),
+						Type:       model.OrderType(wsOrderTradeUpdate.Type),
+						Status:     model.OrderStatusType(wsOrderTradeUpdate.Status),
+						Price:      price,
+						Quantity:   quantity,
+					}
+					orders <- order
+				}
+
+			}, func(err error) {
+				cerr <- err
+			})
+			if err != nil {
+				cerr <- err
+				close(cerr)
+				close(orders)
+				return
+			}
+
+			select {
+			case <-ctx.Done():
+				close(cerr)
+				close(orders)
+				return
+			case <-done:
+				time.Sleep(ba.Duration())
+			}
+		}
+	}()
+
+	return orders, cerr
 }

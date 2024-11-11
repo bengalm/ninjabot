@@ -785,3 +785,6 @@ func (p *PaperWallet) CandlesByLimit(ctx context.Context, pair, period string, l
 func (p *PaperWallet) CandlesSubscription(ctx context.Context, pair, timeframe string) (chan model.Candle, chan error) {
 	return p.feeder.CandlesSubscription(ctx, pair, timeframe)
 }
+func (p *PaperWallet) AccountSubscription(ctx context.Context) (chan model.Order, chan error) {
+	return p.feeder.AccountSubscription(ctx)
+}

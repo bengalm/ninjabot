@@ -67,7 +67,7 @@ func NewBot(ctx context.Context, settings model.Settings, exch service.Exchange,
 		settings:              settings,
 		exchange:              exch,
 		strategy:              str,
-		orderFeed:             order.NewOrderFeed(),
+		orderFeed:             order.NewOrderFeed(exch),
 		dataFeed:              exchange.NewDataFeed(exch),
 		strategiesControllers: make(map[string]*strategy.Controller),
 		priorityQueueCandle:   model.NewPriorityQueue(nil),
@@ -381,6 +381,7 @@ func (n *NinjaBot) Run(ctx context.Context) error {
 
 	// start data feed and receives new candles
 	n.dataFeed.Start(n.backtest)
+	n.orderFeed.SubWs(ctx)
 
 	// start processing new candles for production or backtesting environment
 	if n.backtest {

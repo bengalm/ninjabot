@@ -1,7 +1,10 @@
 package order
 
 import (
+	"context"
+	"fmt"
 	"github.com/bengalm/ninjabot/model"
+	"github.com/bengalm/ninjabot/service"
 )
 
 type DataFeed struct {
@@ -12,6 +15,7 @@ type DataFeed struct {
 type FeedConsumer func(order model.Order)
 
 type Feed struct {
+	exchange              service.Exchange
 	OrderFeeds            map[string]*DataFeed
 	SubscriptionsBySymbol map[string][]Subscription
 }
@@ -21,10 +25,11 @@ type Subscription struct {
 	consumer     FeedConsumer
 }
 
-func NewOrderFeed() *Feed {
+func NewOrderFeed(e service.Exchange) *Feed {
 	return &Feed{
 		OrderFeeds:            make(map[string]*DataFeed),
 		SubscriptionsBySymbol: make(map[string][]Subscription),
+		exchange:              e,
 	}
 }
 
@@ -49,6 +54,7 @@ func (d *Feed) Publish(order model.Order, _ bool) {
 }
 
 func (d *Feed) Start() {
+
 	for pair := range d.OrderFeeds {
 		go func(pair string, feed *DataFeed) {
 			for order := range feed.Data {
@@ -58,4 +64,18 @@ func (d *Feed) Start() {
 			}
 		}(pair, d.OrderFeeds[pair])
 	}
+}
+
+func (d *Feed) SubWs(ctx context.Context) {
+	go func() {
+		subscription, errors := d.exchange.AccountSubscription(ctx)
+		for {
+			select {
+			case err := <-errors:
+				fmt.Printf("SubWs error: %v\n", err)
+			case o := <-subscription:
+				d.Publish(o, false)
+			}
+		}
+	}()
 }

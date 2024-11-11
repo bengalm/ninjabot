@@ -614,6 +614,11 @@ func (b *Binance) OpenOrders(pair string) ([]model.Order, error) {
 func (b *Binance) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
 	return model.Order{}, nil
 }
+func (b *Binance) AccountSubscription(ctx context.Context) (chan model.Order, chan error) {
+	ccandle := make(chan model.Order)
+	cerr := make(chan error)
+	return ccandle, cerr
+}
 
 func CandleFromKline(pair string, k binance.Kline) model.Candle {
 	t := time.Unix(0, k.OpenTime*int64(time.Millisecond))
