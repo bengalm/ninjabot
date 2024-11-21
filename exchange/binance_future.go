@@ -300,7 +300,7 @@ func (b *BinanceFuture) CreateOrderLimit(side model.SideType, pair string,
 		return model.Order{}, err
 	}
 
-	price, err := strconv.ParseFloat(order.Price, 64)
+	price, err := strconv.ParseFloat(order.AvgPrice, 64)
 	if err != nil {
 		return model.Order{}, err
 	}
@@ -480,7 +480,7 @@ func newFutureOrder(order *futures.Order) model.Order {
 	if cost > 0 && quantity > 0 {
 		price = cost / quantity
 	} else {
-		price, err = strconv.ParseFloat(order.Price, 64)
+		price, err = strconv.ParseFloat(order.AvgPrice, 64)
 		log.CheckErr(log.WarnLevel, err)
 		quantity, err = strconv.ParseFloat(order.OrigQuantity, 64)
 		log.CheckErr(log.WarnLevel, err)
@@ -763,6 +763,7 @@ func (b *BinanceFuture) AccountSubscription(ctx context.Context) (chan model.Ord
 			done, _, err := futures.WsUserDataServe(key, func(event *futures.WsUserDataEvent) {
 				if event.Event == futures.UserDataEventTypeOrderTradeUpdate {
 					wsOrderTradeUpdate := event.OrderTradeUpdate
+					log.Infof("ws order trade update: %+v", wsOrderTradeUpdate)
 					price, err := strconv.ParseFloat(wsOrderTradeUpdate.AveragePrice, 64)
 					if err != nil {
 						cerr <- err

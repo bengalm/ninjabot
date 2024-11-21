@@ -179,7 +179,7 @@ type Position struct {
 }
 
 func (p *Position) Update(order *model.Order) (result *Result, finished bool) {
-	log.Infof("order update: %+v", order)
+	log.Infof("order position=%+v update=%+v", p, order)
 	price := order.Price
 	if order.Type == model.OrderTypeStopLoss || order.Type == model.OrderTypeStopLossLimit {
 		price = *order.Stop
@@ -496,6 +496,8 @@ func (c *Controller) CreateOrderLimit(side model.SideType, pair string, size, li
 		c.notifyError(err)
 		return model.Order{}, err
 	}
+	// calculate profit
+	c.processTrade(&order)
 	go c.orderFeed.Publish(order, true)
 	log.Infof("[ORDER CREATED] %s", order)
 	return order, nil
@@ -658,4 +660,8 @@ func (c *Controller) OpenOrders(pair string) ([]model.Order, error) {
 	}
 	log.Infof("[ORDER CancelOpenOrders] %s", pair)
 	return orders, nil
+}
+
+func (c *Controller) PositionAll() map[string]*Position {
+	return c.position
 }

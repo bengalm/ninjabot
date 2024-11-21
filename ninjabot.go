@@ -381,7 +381,7 @@ func (n *NinjaBot) Run(ctx context.Context) error {
 
 	// start data feed and receives new candles
 	n.dataFeed.Start(n.backtest)
-	n.orderFeed.SubWs(ctx)
+	n.orderFeed.SubWs(ctx, n.Controller())
 
 	// start processing new candles for production or backtesting environment
 	if n.backtest {

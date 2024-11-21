@@ -66,7 +66,7 @@ func (d *Feed) Start() {
 	}
 }
 
-func (d *Feed) SubWs(ctx context.Context) {
+func (d *Feed) SubWs(ctx context.Context, controller *Controller) {
 	go func() {
 		subscription, errors := d.exchange.AccountSubscription(ctx)
 		for {
@@ -74,6 +74,7 @@ func (d *Feed) SubWs(ctx context.Context) {
 			case err := <-errors:
 				fmt.Printf("SubWs error: %v\n", err)
 			case o := <-subscription:
+				controller.processTrade(&o)
 				d.Publish(o, false)
 			}
 		}

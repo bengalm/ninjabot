@@ -56,7 +56,13 @@ type Order struct {
 	Candle      Candle  `json:"-" gorm:"-"`
 }
 
+//	func (o Order) String() string {
+//		return fmt.Sprintf("[%s] %s %s | ID: %d, Type: %s, %f x $%f (~$%.f)",
+//			o.Status, o.Side, o.Pair, o.ID, o.Type, o.Quantity, o.Price, o.Quantity*o.Price)
+//	}
 func (o Order) String() string {
-	return fmt.Sprintf("[%s] %s %s | ID: %d, Type: %s, %f x $%f (~$%.f)",
-		o.Status, o.Side, o.Pair, o.ID, o.Type, o.Quantity, o.Price, o.Quantity*o.Price)
+	return fmt.Sprintf(
+		"Pair: %s, Side: %s, Type: %s, Status: %s, Price: %f, Quantity: %f Value: %f ID: %d",
+		o.Pair, o.Side, o.Type, o.Status, o.Price, o.Quantity, o.Price*o.Quantity, o.ID,
+	)
 }
