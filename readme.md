@@ -6,7 +6,7 @@
 [![Discord](https://img.shields.io/discord/960156400376483840?color=5865F2&label=discord)](https://discord.gg/TGCrUH972E)
 [![Discord](https://img.shields.io/badge/donate-patreon-red)](https://www.patreon.com/ninjabot_github)
 
-A fast cryptocurrency trading bot framework implemented in Go. Ninjabot permits users to create and test custom strategies for sport and future markets. 
+A fast cryptocurrency trading bot framework implemented in Go. Ninjabot permits users to create and test custom strategies for spot and futures market. 
 
 Docs: https://rodrigo-brito.github.io/ninjabot/
 
@@ -117,7 +117,7 @@ Chart available at http://localhost:8080
 
 ### Exchanges
 
-Currently, we only support [Binance](https://www.binance.com/en?ref=35723227) exchange. If you want to include support for other exchanges, you need to implement a new `struct` that implements the interface `Exchange`. You can check some examples in [exchange](./pkg/exchange) directory.
+Currently, we only support [Binance](https://www.binance.com/en?ref=35723227) exchange. If you want to include support for other exchanges, you need to implement a new `struct` that implements the interface `Exchange`. You can check some examples in [exchange](exchange) directory.
 
 ### Support the project
 

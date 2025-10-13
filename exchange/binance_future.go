@@ -256,10 +256,15 @@ func (b *BinanceFuture) CreateOrderTrailingStop(pair string, side model.SideType
 		Quantity:   quantity,
 	}, nil
 }
+
 func (b *BinanceFuture) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		precision := getDecimalPrecision(info.TickSize)
-		value = common.AmountToLotSize(info.TickSize, precision, value)
+		return common.AmountToLotSize(
+			strconv.FormatFloat(value, 'f', -1, 64),
+			strconv.FormatFloat(info.MinPrice, 'f', -1, 64),
+			strconv.FormatFloat(info.TickSize, 'f', -1, 64),
+			info.QuotePrecision,
+		)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }
@@ -275,7 +280,12 @@ func getDecimalPrecision(num float64) int {
 
 func (b *BinanceFuture) formatQuantity(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		value = common.AmountToLotSize(info.StepSize, info.BaseAssetPrecision, value)
+		return common.AmountToLotSize(
+			strconv.FormatFloat(value, 'f', -1, 64),
+			strconv.FormatFloat(info.MinQuantity, 'f', -1, 64),
+			strconv.FormatFloat(info.StepSize, 'f', -1, 64),
+			info.BaseAssetPrecision,
+		)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }

@@ -254,17 +254,24 @@ func (b *Binance) CreateOrderTrailingStop(pair string, side model.SideType, limi
 }
 func (b *Binance) formatPrice(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		fmt.Printf("---formatPrice before pair: %s value: %f tickSize: %f quotePrecision: %d \n", pair, value, info.TickSize, info.QuotePrecision)
-		value = common.AmountToLotSize(info.TickSize, info.QuotePrecision, value)
-		fmt.Printf("---formatPrice after pair: %s value: %f tickSize: %f quotePrecision: %d \n", pair, value, info.TickSize, info.QuotePrecision)
-
+		return common.AmountToLotSize(
+			strconv.FormatFloat(value, 'f', -1, 64),
+			strconv.FormatFloat(info.MinPrice, 'f', -1, 64),
+			strconv.FormatFloat(info.TickSize, 'f', -1, 64),
+			info.QuotePrecision,
+		)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }
 
 func (b *Binance) formatQuantity(pair string, value float64) string {
 	if info, ok := b.assetsInfo[pair]; ok {
-		value = common.AmountToLotSize(info.StepSize, info.BaseAssetPrecision, value)
+		return common.AmountToLotSize(
+			strconv.FormatFloat(value, 'f', -1, 64),
+			strconv.FormatFloat(info.MinQuantity, 'f', -1, 64),
+			strconv.FormatFloat(info.StepSize, 'f', -1, 64),
+			info.BaseAssetPrecision,
+		)
 	}
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }
