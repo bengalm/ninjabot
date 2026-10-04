@@ -3,11 +3,12 @@ package exchange
 import (
 	"context"
 	"fmt"
-	"github.com/adshao/go-binance/v2"
-	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/adshao/go-binance/v2"
+	"github.com/pkg/errors"
 
 	"github.com/adshao/go-binance/v2/common"
 	"github.com/adshao/go-binance/v2/futures"
@@ -188,12 +189,13 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 		limit = -limit
 	}
 
-	orderService := b.client.NewCreateOrderService().Symbol(pair).
-		Type(futures.OrderTypeStopMarket).
+	orderService := b.client.NewCreateAlgoOrderService().Symbol(pair).
+		AlgoType(futures.OrderAlgoTypeConditional).
+		Type(futures.AlgoOrderTypeStopMarket).
 		TimeInForce(futures.TimeInForceTypeGTC).
 		Side(sideType).
 		//Price(b.formatPrice(pair, limit)).
-		StopPrice(b.formatPrice(pair, limit))
+		TriggerPrice(b.formatPrice(pair, limit))
 
 	if quantity > 0 {
 		err := b.validate(pair, quantity)
@@ -211,16 +213,16 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 	}
 
 	price, _ := strconv.ParseFloat(order.Price, 64)
-	quantity, _ = strconv.ParseFloat(order.OrigQuantity, 64)
+	quantity, _ = strconv.ParseFloat(order.Quantity, 64)
 
 	return model.Order{
-		ExchangeID: order.OrderID,
+		ExchangeID: order.AlgoId,
 		CreatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		Pair:       pair,
 		Side:       model.SideType(order.Side),
-		Type:       model.OrderType(order.Type),
-		Status:     model.OrderStatusType(order.Status),
+		Type:       model.OrderType(order.OrderType),
+		Status:     model.OrderStatusType(order.AlgoStatus),
 		Price:      price,
 		Quantity:   quantity,
 	}, nil
@@ -228,9 +230,9 @@ func (b *BinanceFuture) CreateOrderStop(pair string, quantity float64, limit flo
 func (b *BinanceFuture) CreateOrderTrailingStop(pair string, side model.SideType, limit float64, quantity float64, callBackRate string) (model.Order, error) {
 	formatPrice := b.formatPrice(pair, limit)
 	formatQuantity := b.formatQuantity(pair, quantity)
-	order, err := b.client.NewCreateOrderService().
+	order, err := b.client.NewCreateAlgoOrderService().
 		Symbol(pair).
-		Type(futures.OrderTypeTrailingStopMarket).
+		Type(futures.AlgoOrderTypeTrailingStopMarket).
 		TimeInForce(futures.TimeInForceTypeGTC).
 		ActivationPrice(formatPrice).
 		WorkingType(futures.WorkingTypeMarkPrice).
@@ -242,16 +244,16 @@ func (b *BinanceFuture) CreateOrderTrailingStop(pair string, side model.SideType
 		return model.Order{}, err
 	}
 	price, _ := strconv.ParseFloat(order.Price, 64)
-	quantity, _ = strconv.ParseFloat(order.OrigQuantity, 64)
+	quantity, _ = strconv.ParseFloat(order.Quantity, 64)
 
 	return model.Order{
-		ExchangeID: order.OrderID,
+		ExchangeID: order.AlgoId,
 		CreatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		Pair:       pair,
 		Side:       model.SideType(order.Side),
-		Type:       model.OrderType(order.Type),
-		Status:     model.OrderStatusType(order.Status),
+		Type:       model.OrderType(order.OrderType),
+		Status:     model.OrderStatusType(order.AlgoStatus),
 		Price:      price,
 		Quantity:   quantity,
 	}, nil
@@ -378,11 +380,11 @@ func (b *BinanceFuture) CreateOrderMarket(side model.SideType, pair string, quan
 }
 
 func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
-	orderService := b.client.NewCreateOrderService().
+	orderService := b.client.NewCreateAlgoOrderService().
 		Symbol(pair).
-		Type(futures.OrderTypeTakeProfit).
+		Type(futures.AlgoOrderTypeTakeProfit).
 		Side(futures.SideType(side)).
-		StopPrice(b.formatPrice(pair, limit))
+		TriggerPrice(b.formatPrice(pair, limit))
 	if quantity > 0 {
 		err := b.validate(pair, quantity)
 		if err != nil {
@@ -390,7 +392,7 @@ func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity fl
 		}
 		orderService = orderService.Quantity(b.formatQuantity(pair, quantity)).Price(b.formatPrice(pair, limit))
 	} else {
-		orderService.Type(futures.OrderTypeTakeProfitMarket)
+		orderService.Type(futures.AlgoOrderTypeTakeProfitMarket)
 		orderService = orderService.ClosePosition(true)
 	}
 
@@ -400,24 +402,24 @@ func (b *BinanceFuture) TakeProfit(side model.SideType, pair string, quantity fl
 		return model.Order{}, err
 	}
 
-	cost, err := strconv.ParseFloat(order.CumQuote, 64)
+	cost, err := strconv.ParseFloat(order.Price, 64)
 	if err != nil {
 		return model.Order{}, err
 	}
 
-	quantity, err = strconv.ParseFloat(order.ExecutedQuantity, 64)
+	quantity, err = strconv.ParseFloat(order.Quantity, 64)
 	if err != nil {
 		return model.Order{}, err
 	}
 
 	return model.Order{
-		ExchangeID: order.OrderID,
+		ExchangeID: order.AlgoId,
 		CreatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		UpdatedAt:  time.Unix(0, order.UpdateTime*int64(time.Millisecond)),
 		Pair:       order.Symbol,
 		Side:       model.SideType(order.Side),
-		Type:       model.OrderType(order.Type),
-		Status:     model.OrderStatusType(order.Status),
+		Type:       model.OrderType(order.AlgoType),
+		Status:     model.OrderStatusType(order.AlgoStatus),
 		Price:      cost / quantity,
 		Quantity:   quantity,
 	}, nil
