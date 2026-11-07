@@ -31,6 +31,10 @@ func init() {
 }
 
 func SplitAssetQuote(pair string) (asset string, quote string) {
+	// OKX SWAP instId支持(11-07): "BTC-USDT-SWAP"→("BTC","USDT")
+	if s := strings.TrimSuffix(pair, "-USDT-SWAP"); s != pair && s != "" {
+		return s, "USDT"
+	}
 	data, ok := pairAssetQuoteMap[pair]
 	if !ok {
 		if strings.Contains(pair, "USDT") {
