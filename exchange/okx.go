@@ -211,17 +211,28 @@ func NewOKX(ctx context.Context, options ...OKXOption) (*OKX, error) {
 		o.tickPrec[po.Pair] = decimals(inst.TickSz)
 		o.lotPrec[po.Pair] = decimals(inst.LotSz)
 
-		// set leverage, isolated margin
+		// set leverage, isolated margin (限流退避: 50011重试, 币间pacing 150ms)
 		if o.APIKey != "" {
 			body := map[string]interface{}{
 				"instId":  po.Pair,
 				"lever":   strconv.Itoa(po.Leverage),
 				"mgnMode": "isolated",
 			}
-			_, err := o.request(ctx, http.MethodPost, "/api/v5/account/set-leverage", body, true)
-			if err != nil {
-				return nil, fmt.Errorf("set leverage %dx isolated for %s fail: %w", po.Leverage, po.Pair, err)
+			var levErr error
+			for attempt := 0; attempt < 5; attempt++ {
+				if attempt > 0 {
+					time.Sleep(time.Duration(attempt) * time.Second)
+				}
+				_, levErr = o.request(ctx, http.MethodPost, "/api/v5/account/set-leverage", body, true)
+				if levErr == nil {
+					break
+				}
 			}
+			if levErr != nil {
+				log.Errorf("[OKX] set leverage %dx for %s failed after retries (继续, 首次交易前需自查): %v",
+					po.Leverage, po.Pair, levErr)
+			}
+			time.Sleep(150 * time.Millisecond)
 		}
 		o.pairs = append(o.pairs, po.Pair)
 		log.Infof("[OKX] pair %s ready: ctVal=%s lotSz=%s minSz=%s tickSz=%s lever=%dx isolated",
