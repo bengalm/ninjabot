@@ -1430,6 +1430,8 @@ func (o *OKX) AccountSubscription(ctx context.Context) (chan model.Order, chan e
 		defer close(orders)
 		defer close(cerr)
 		seen := make(map[string]bool)
+		startMs := time.Now().UnixMilli() // P0修复(11-07): 历史成交回放触发SMCBB幽灵止损26笔
+		first := true
 		ticker := time.NewTicker(20 * time.Second)
 		defer ticker.Stop()
 		for {
@@ -1457,10 +1459,15 @@ func (o *OKX) AccountSubscription(ctx context.Context) (chan model.Order, chan e
 						continue
 					}
 					seen[key] = true
+					ut, _ := strconv.ParseInt(row.UTime, 10, 64)
+					if first || ut <= startMs {
+						continue // 首轮只建基线; 启动前的历史成交永不发射
+					}
 					if row.State == "filled" && row.OrdID != "" {
 						emitted = append(emitted, o.rowToOrder(row, false))
 					}
 				}
+				first = false
 				for _, ord := range emitted {
 					select {
 					case orders <- ord:
