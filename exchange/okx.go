@@ -79,6 +79,9 @@ type OKX struct {
 	lotPrec     map[string]int
 	ordIDs      sync.Map // int64 -> okxOrderRef
 	serverSkew  time.Duration
+	rateMu      sync.Mutex
+	lastReq     time.Time
+	minInterval time.Duration // 全局最小请求间隔(默认120ms)
 	accountMu   sync.Mutex
 	accountData *model.Account
 	accountTime time.Time
@@ -143,15 +146,16 @@ func OKXSplitAssetQuote(pair string) (string, string) {
 // leverage to the configured value with isolated margin.
 func NewOKX(ctx context.Context, options ...OKXOption) (*OKX, error) {
 	o := &OKX{
-		ctx:        ctx,
-		client:     &http.Client{Timeout: 10 * time.Second},
-		assetsInfo: make(map[string]model.AssetInfo),
-		ctVal:      make(map[string]float64),
-		lotSz:      make(map[string]float64),
-		minSz:      make(map[string]float64),
-		tickSz:     make(map[string]float64),
-		tickPrec:   make(map[string]int),
-		lotPrec:    make(map[string]int),
+		ctx:         ctx,
+		client:      &http.Client{Timeout: 10 * time.Second},
+		assetsInfo:  make(map[string]model.AssetInfo),
+		ctVal:       make(map[string]float64),
+		lotSz:       make(map[string]float64),
+		minSz:       make(map[string]float64),
+		tickSz:      make(map[string]float64),
+		tickPrec:    make(map[string]int),
+		lotPrec:     make(map[string]int),
+		minInterval: 120 * time.Millisecond,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -279,6 +283,32 @@ func (o *OKX) request(ctx context.Context, method, path string, body interface{}
 		}
 	}
 
+	// 全局限速: 请求间隔≥120ms(防50011) + 50011自动退避重试×4
+	o.rateMu.Lock()
+	wait := o.minInterval - time.Since(o.lastReq)
+	if wait > 0 {
+		time.Sleep(wait)
+	}
+	o.lastReq = time.Now()
+	o.rateMu.Unlock()
+
+	var data json.RawMessage
+	var err error
+	for attempt := 0; ; attempt++ {
+		data, err = o.doRequest(ctx, method, path, bodyBytes, auth)
+		if err == nil {
+			return data, nil
+		}
+		if attempt >= 4 || !strings.Contains(err.Error(), "50011") {
+			return nil, err
+		}
+		backoff := time.Duration(500*(attempt+1)) * time.Millisecond
+		log.Errorf("[OKX] 50011 rate-limited %s %s, retry %d in %v", method, path, attempt+1, backoff)
+		time.Sleep(backoff)
+	}
+}
+
+func (o *OKX) doRequest(ctx context.Context, method, path string, bodyBytes []byte, auth bool) (json.RawMessage, error) {
 	req, err := http.NewRequestWithContext(ctx, method, okxBaseURL+path, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, err
