@@ -795,6 +795,59 @@ func (o *OKX) CreateOrderOCO(_ model.SideType, _ string, _, _, _, _ float64) ([]
 	panic("not implemented")
 }
 
+// CreateOrderStopTP: 一张OCO同时挂SL+TP(全平, reduceOnly)——OKX一仓只许一张TP/SL单(51088),
+// SL/TP同号约定同CreateOrderStop: 负值=buy侧(空头仓保护)
+func (o *OKX) CreateOrderStopTP(pair string, quantity float64, sl float64, tp float64) (model.Order, error) {
+	side := model.SideTypeSell
+	if sl < 0 {
+		side = model.SideTypeBuy
+		sl = -sl
+		tp = -tp
+	}
+	body := map[string]interface{}{
+		"instId":      pair,
+		"tdMode":      "isolated",
+		"side":        okxSide(side),
+		"ordType":     "oco",
+		"slTriggerPx": o.formatPrice(pair, sl),
+		"slOrdPx":     "-1",
+		"tpTriggerPx": o.formatPrice(pair, tp),
+		"tpOrdPx":     "-1",
+		"reduceOnly":  true,
+	}
+	if quantity > 0 {
+		contracts, err := o.toContracts(pair, quantity)
+		if err != nil {
+			return model.Order{}, err
+		}
+		body["sz"] = o.formatContracts(pair, contracts)
+	} else {
+		body["closeFraction"] = "1"
+	}
+	data, err := o.request(o.ctx, http.MethodPost, "/api/v5/trade/order-algo", body, true)
+	if err != nil {
+		return model.Order{}, err
+	}
+	ack, err := checkAck(data)
+	if err != nil {
+		return model.Order{}, err
+	}
+	id, _ := strconv.ParseInt(ack.AlgoID, 10, 64)
+	o.rememberOrderID(id, ack.AlgoID, true)
+	return model.Order{
+		ExchangeID:    id,
+		ClientOrderID: ack.AlgoID,
+		Pair:          pair,
+		Side:          side,
+		Type:          model.OrderTypeTakeProfit,
+		Status:        model.OrderStatusTypeNew,
+		Price:         tp,
+		Quantity:      quantity,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}, nil
+}
+
 func (o *OKX) CreateOrderLimit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
 	contracts, err := o.toContracts(pair, quantity)
 	if err != nil {
@@ -1233,7 +1286,7 @@ func (o *OKX) OpenOrders(pair string) ([]model.Order, error) {
 	}
 
 	// pending algo orders (stops / trailing stops / TP)
-	for _, ordType := range []string{"conditional", "move_order_stop"} {
+	for _, ordType := range []string{"conditional", "move_order_stop", "oco"} {
 		path := fmt.Sprintf("/api/v5/trade/orders-algo-pending?ordType=%s", ordType)
 		if pair != "" {
 			path += "&instId=" + url.QueryEscape(pair)
@@ -1302,7 +1355,7 @@ func (o *OKX) CancelOpenOrders(pair string) error {
 	}
 
 	// algo orders (stop / trailing / TP)
-	for _, ordType := range []string{"conditional", "move_order_stop"} {
+	for _, ordType := range []string{"conditional", "move_order_stop", "oco"} {
 		data, err := o.request(o.ctx, http.MethodGet,
 			fmt.Sprintf("/api/v5/trade/orders-algo-pending?ordType=%s&instId=%s", ordType, url.QueryEscape(pair)), nil, true)
 		if err != nil {
