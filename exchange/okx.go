@@ -951,13 +951,13 @@ func (o *OKX) CreateOrderStop(pair string, quantity float64, limit float64) (mod
 	}
 
 	body := map[string]interface{}{
-		"instId":     pair,
-		"tdMode":     "isolated",
-		"side":       okxSide(side),
-		"ordType":    "conditional",
+		"instId":      pair,
+		"tdMode":      "isolated",
+		"side":        okxSide(side),
+		"ordType":     "conditional",
 		"slTriggerPx": o.formatPrice(pair, limit),
-		"slOrdPx":    "-1", // market when triggered
-		"reduceOnly": true,
+		"slOrdPx":     "-1", // market when triggered
+		"reduceOnly":  true,
 	}
 	if quantity > 0 {
 		contracts, err := o.toContracts(pair, quantity)
@@ -997,12 +997,12 @@ func (o *OKX) CreateOrderStop(pair string, quantity float64, limit float64) (mod
 // closing side (SELL closes a long). quantity == 0 closes the whole position.
 func (o *OKX) TakeProfit(side model.SideType, pair string, quantity float64, limit float64) (model.Order, error) {
 	body := map[string]interface{}{
-		"instId":     pair,
-		"tdMode":     "isolated",
-		"side":       okxSide(side),
-		"ordType":    "conditional",
+		"instId":      pair,
+		"tdMode":      "isolated",
+		"side":        okxSide(side),
+		"ordType":     "conditional",
 		"tpTriggerPx": o.formatPrice(pair, limit),
-		"reduceOnly": true,
+		"reduceOnly":  true,
 	}
 	if quantity > 0 {
 		contracts, err := o.toContracts(pair, quantity)
@@ -1140,22 +1140,22 @@ func (o *OKX) CreateOrderMarketQuote(_ model.SideType, _ string, _ float64) (mod
 // ---------------------------------------------------------------- order state
 
 type okxOrderRow struct {
-	OrdID     string `json:"ordId"`
-	AlgoID    string `json:"algoId"`
-	ClOrdID   string `json:"clOrdId"`
-	InstID    string `json:"instId"`
-	Side      string `json:"side"`
-	OrdType   string `json:"ordType"`
-	Px        string `json:"px"`
-	Sz        string `json:"sz"`
-	FillSz    string `json:"accFillSz"`
-	AvgPx     string `json:"avgPx"`
+	OrdID       string `json:"ordId"`
+	AlgoID      string `json:"algoId"`
+	ClOrdID     string `json:"clOrdId"`
+	InstID      string `json:"instId"`
+	Side        string `json:"side"`
+	OrdType     string `json:"ordType"`
+	Px          string `json:"px"`
+	Sz          string `json:"sz"`
+	FillSz      string `json:"accFillSz"`
+	AvgPx       string `json:"avgPx"`
 	SlTriggerPx string `json:"slTriggerPx"`
 	TpTriggerPx string `json:"tpTriggerPx"`
-	ActivePx  string `json:"activePx"`
-	State     string `json:"state"`
-	CTime     string `json:"cTime"`
-	UTime     string `json:"uTime"`
+	ActivePx    string `json:"activePx"`
+	State       string `json:"state"`
+	CTime       string `json:"cTime"`
+	UTime       string `json:"uTime"`
 }
 
 func (o *OKX) rowToOrder(row okxOrderRow, algo bool) model.Order {
@@ -1463,14 +1463,31 @@ func (o *OKX) Account() (model.Account, error) {
 	return account, nil
 }
 
+// Position(11-08 P0修复): SWAP的持仓在/account/positions(带方向), 余额口径的asset在合约账户恒0——
+// 旧实现(读余额)导致策略侧持仓门/出场数量/重启恢复全部拿到0: Sell静默no-op、恢复跳过、可重复开仓。
 func (o *OKX) Position(pair string) (asset, quote float64, err error) {
-	assetTick, quoteTick := OKXSplitAssetQuote(pair)
+	_, quoteTick := OKXSplitAssetQuote(pair)
 	acc, err := o.Account()
 	if err != nil {
 		return 0, 0, err
 	}
-	assetBalance, quoteBalance := acc.Balance(assetTick, quoteTick)
-	return assetBalance.Free + assetBalance.Lock, quoteBalance.Free, nil
+	assetTick, quoteTick := OKXSplitAssetQuote(pair)
+	_, quoteBalance := acc.Balance(assetTick, quoteTick)
+	data, err := o.request(o.ctx, http.MethodGet, "/api/v5/account/positions?instId="+url.QueryEscape(pair), nil, true)
+	if err != nil {
+		return 0, quoteBalance.Free, err
+	}
+	var rows []struct {
+		Pos string `json:"pos"`
+	}
+	if err := json.Unmarshal(data, &rows); err != nil {
+		return 0, quoteBalance.Free, err
+	}
+	pos := 0.0
+	if len(rows) > 0 {
+		pos, _ = strconv.ParseFloat(rows[0].Pos, 64)
+	}
+	return o.contractsToCoins(pair, pos), quoteBalance.Free, nil
 }
 
 // AccountSubscription polls recent order history and emits filled orders,
