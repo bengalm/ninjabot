@@ -648,14 +648,25 @@ func (o *OKX) CandlesSubscription(ctx context.Context, pair, timeframe string) (
 					continue
 				}
 				for _, c := range candles { // oldest -> newest
-					if !c.Complete || c.Time.UnixMilli() <= lastEmitted {
-						continue
+					if c.Complete && c.Time.UnixMilli() > lastEmitted {
+						lastEmitted = c.Time.UnixMilli()
+						select {
+						case ccandle <- c:
+						case <-ctx.Done():
+							return
+						}
 					}
-					lastEmitted = c.Time.UnixMilli()
-					select {
-					case ccandle <- c:
-					case <-ctx.Done():
-						return
+				}
+				// v2.31(11-14用户令: 默认实时): 补发最新未闭合柱 — 每轮poll后emit forming柱,
+				// controller替换df末行+重算指标+调OnPartialCandle; 不更新lastEmitted(闭合时才计)
+				for i := len(candles) - 1; i >= 0; i-- {
+					if !candles[i].Complete {
+						select {
+						case ccandle <- candles[i]:
+						case <-ctx.Done():
+							return
+						}
+						break
 					}
 				}
 			}
